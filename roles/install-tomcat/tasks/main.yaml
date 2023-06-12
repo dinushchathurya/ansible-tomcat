@@ -1,0 +1,36 @@
+---
+- name: Updating repos
+  yum:
+    name: "*"
+    state: latest
+- name: Installing required java version
+  package: 
+    name: "{{req_java}}"
+    state: present
+- name: Setting default java 
+  alternatives: 
+    name: java
+    link: /usr/bin/java ### which java
+    path: /usr/lib/jvm/{{java_path}}/bin/java ### ls -ltr /usr/lib/jvm
+- name: Download required tomcat
+  get_url: 
+    url: https://dlcdn.apache.org/tomcat/tomcat-{{req_tomcat_ver.split('.')[0]}}/v{{req_tomcat_ver}}/bin/apache-tomcat-{{req_tomcat_ver}}.tar.gz
+    dest: /usr/local
+- name: Extracting downloaded tomcat
+  unarchive: 
+    src: "/usr/local/apache-tomcat-{{req_tomcat_ver}}.tar.gz"
+    dest: /usr/local
+    remote_src: yes ### otherwise this is run in your master
+# - name: Rename tomcat home
+#   command: mv /usr/local/apache-tomcat-{{req_tomcat_ver}} /usr/local/latest
+- name: Modify default port
+  template:
+    src: server.xml.j2
+    dest: /usr/local/apache-tomcat-{{req_tomcat_ver}}/conf/server.xml
+- name: Starting tomcat
+  shell: nohup /usr/local/apache-tomcat-{{req_tomcat_ver}}/bin/startup.sh & ### running in background
+
+
+
+
+
